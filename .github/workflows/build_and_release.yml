@@ -186,16 +186,14 @@ jobs:
           touch build/.gdignore
 
           ./godot --headless --export-release "Linux" build/linux/msdf-atlas-studio.x86_64
-          mkdir -p build/linux/bin
-          cp bin/msdf_atlas_studio.gdextension build/linux/bin/
-          cp bin/libmsdf_backend.linux.template_release.x86_64.so build/linux/bin/
+          mkdir -p build/linux/assets
+          cp -r assets/fonts build/linux/assets/
           cp icon.svg LICENSE README.md CONTRIBUTORS.md build/linux/
           tar -czf "msdf-atlas-studio-${TAG_OR_REF}-linux-x86_64.tar.gz" -C build/linux .
 
           ./godot --headless --export-release "Windows" build/windows/msdf-atlas-studio.exe
-          mkdir -p build/windows/bin
-          cp bin/msdf_atlas_studio.gdextension build/windows/bin/
-          cp bin/libmsdf_backend.windows.template_release.x86_64.dll build/windows/bin/
+          mkdir -p build/windows/assets
+          cp -r assets/fonts build/windows/assets/
           cp icon.svg LICENSE README.md CONTRIBUTORS.md build/windows/
           (cd build/windows && zip -r "../../msdf-atlas-studio-${TAG_OR_REF}-windows-x86_64.zip" .)
 
@@ -204,6 +202,8 @@ jobs:
           mkdir -p "build/macos/extracted/msdf-atlas-studio.app/Contents/MacOS/bin"
           cp bin/msdf_atlas_studio.gdextension "build/macos/extracted/msdf-atlas-studio.app/Contents/MacOS/bin/"
           cp bin/libmsdf_backend.macos.template_release.universal.dylib "build/macos/extracted/msdf-atlas-studio.app/Contents/MacOS/bin/"
+          mkdir -p "build/macos/extracted/assets"
+          cp -r assets/fonts "build/macos/extracted/assets/"
           cp icon.svg LICENSE README.md CONTRIBUTORS.md build/macos/extracted/
           (cd build/macos/extracted && zip -r "../../../msdf-atlas-studio-${TAG_OR_REF}-macos-universal.zip" .)
 

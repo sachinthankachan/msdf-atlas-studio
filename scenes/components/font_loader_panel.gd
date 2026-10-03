@@ -38,32 +38,73 @@ func refresh_from_app_state() -> void:
 		_on_font_loaded(fb, false)
 
 func _setup_file_dialogs() -> void:
+	var font_filters := PackedStringArray([
+		"*.ttf,*.otf,*.TTF,*.OTF ; Font Files (*.ttf, *.otf)",
+		"*.ttf,*.TTF ; TrueType Fonts (*.ttf)",
+		"*.otf,*.OTF ; OpenType Fonts (*.otf)",
+		"* ; All Files (*)"
+	])
+	var initial_dir := _get_initial_browse_dir()
+
 	primary_file_dialog = FileDialog.new()
 	primary_file_dialog.file_mode = FileDialog.FILE_MODE_OPEN_FILE
 	primary_file_dialog.access = FileDialog.ACCESS_FILESYSTEM
+	primary_file_dialog.use_native_dialog = true
 	primary_file_dialog.min_size = Vector2i(700, 480)
-	primary_file_dialog.filters = PackedStringArray(["*.ttf, *.otf, *.woff ; Font Files"])
+	primary_file_dialog.filters = font_filters
+	if not initial_dir.is_empty():
+		primary_file_dialog.current_dir = initial_dir
 	primary_file_dialog.file_selected.connect(_on_primary_file_selected)
 	add_child(primary_file_dialog)
 
 	fallback_file_dialog = FileDialog.new()
 	fallback_file_dialog.file_mode = FileDialog.FILE_MODE_OPEN_FILE
 	fallback_file_dialog.access = FileDialog.ACCESS_FILESYSTEM
+	fallback_file_dialog.use_native_dialog = true
 	fallback_file_dialog.min_size = Vector2i(700, 480)
-	fallback_file_dialog.filters = PackedStringArray(["*.ttf, *.otf, *.woff ; Font Files"])
+	fallback_file_dialog.filters = font_filters
+	if not initial_dir.is_empty():
+		fallback_file_dialog.current_dir = initial_dir
 	fallback_file_dialog.file_selected.connect(_on_fallback_file_selected)
 	add_child(fallback_file_dialog)
 
+func _get_initial_browse_dir() -> String:
+	var candidates := [
+		OS.get_system_dir(OS.SYSTEM_DIR_DOCUMENTS),
+		OS.get_system_dir(OS.SYSTEM_DIR_DOWNLOADS),
+		OS.get_environment("HOME"),
+		OS.get_executable_path().get_base_dir()
+	]
+	for dir in candidates:
+		if not dir.is_empty() and DirAccess.dir_exists_absolute(dir):
+			return dir
+	return ""
+
+func _get_bundled_font_path() -> String:
+	var candidates := [
+		"res://assets/fonts/DejaVuSans.ttf",
+		OS.get_executable_path().get_base_dir().path_join("assets/fonts/DejaVuSans.ttf"),
+		OS.get_executable_path().get_base_dir().path_join("DejaVuSans.ttf")
+	]
+	for p in candidates:
+		if FileAccess.file_exists(p):
+			return p
+	return ""
+
 func _check_default_font() -> void:
-	var default_font_path: String = "res://assets/fonts/DejaVuSans.ttf"
-	if FileAccess.file_exists(default_font_path) and AppState.primary_font_path.is_empty():
-		_load_font(default_font_path, true)
+	var font_path := _get_bundled_font_path()
+	if not font_path.is_empty() and AppState.primary_font_path.is_empty():
+		_load_font(font_path, true)
 
 func _on_browse_primary_pressed() -> void:
 	primary_file_dialog.popup_centered_ratio(0.7)
 
 func _on_use_bundled_font_pressed() -> void:
-	_load_font("res://assets/fonts/DejaVuSans.ttf", true)
+	var font_path := _get_bundled_font_path()
+	if not font_path.is_empty():
+		_load_font(font_path, true)
+	else:
+		push_warning("Bundled font DejaVuSans.ttf not found.")
 
 func _on_add_fallback_pressed() -> void:
 	fallback_file_dialog.popup_centered_ratio(0.7)
@@ -74,9 +115,12 @@ func _on_clear_fallbacks_pressed() -> void:
 		child.queue_free()
 
 func _on_primary_file_selected(path: String) -> void:
+	primary_file_dialog.current_dir = path.get_base_dir()
+	fallback_file_dialog.current_dir = path.get_base_dir()
 	_load_font(path, true)
 
 func _on_fallback_file_selected(path: String) -> void:
+	fallback_file_dialog.current_dir = path.get_base_dir()
 	_load_font(path, false)
 
 func _load_font(path: String, is_primary: bool) -> void:

@@ -89,23 +89,40 @@ func _notification(what: int) -> void:
 		_update_dynamic_layout()
 
 func _setup_project_dialogs() -> void:
+	var proj_filters := PackedStringArray([
+		"*.msdfproj,*.msdfatlas,*.glyphproj,*.glyphforge ; MSDF Atlas Project (*.msdfproj, *.msdfatlas)",
+		"* ; All Files (*)"
+	])
+	var initial_dir := ""
+	var candidates := [
+		OS.get_system_dir(OS.SYSTEM_DIR_DOCUMENTS),
+		OS.get_environment("HOME"),
+		OS.get_executable_path().get_base_dir()
+	]
+	for dir in candidates:
+		if not dir.is_empty() and DirAccess.dir_exists_absolute(dir):
+			initial_dir = dir
+			break
+
 	save_project_dialog = FileDialog.new()
 	save_project_dialog.file_mode = FileDialog.FILE_MODE_SAVE_FILE
 	save_project_dialog.access = FileDialog.ACCESS_FILESYSTEM
+	save_project_dialog.use_native_dialog = true
 	save_project_dialog.min_size = Vector2i(750, 500)
-	save_project_dialog.filters = PackedStringArray([
-		"*.msdfproj, *.msdfatlas, *.glyphproj, *.glyphforge ; MSDF Atlas Project (*.msdfproj, *.msdfatlas)"
-	])
+	save_project_dialog.filters = proj_filters
+	if not initial_dir.is_empty():
+		save_project_dialog.current_dir = initial_dir
 	save_project_dialog.file_selected.connect(_on_save_project_file_selected)
 	add_child(save_project_dialog)
 
 	open_project_dialog = FileDialog.new()
 	open_project_dialog.file_mode = FileDialog.FILE_MODE_OPEN_FILE
 	open_project_dialog.access = FileDialog.ACCESS_FILESYSTEM
+	open_project_dialog.use_native_dialog = true
 	open_project_dialog.min_size = Vector2i(750, 500)
-	open_project_dialog.filters = PackedStringArray([
-		"*.msdfproj, *.msdfatlas, *.glyphproj, *.glyphforge ; MSDF Atlas Project (*.msdfproj, *.msdfatlas)"
-	])
+	open_project_dialog.filters = proj_filters
+	if not initial_dir.is_empty():
+		open_project_dialog.current_dir = initial_dir
 	open_project_dialog.file_selected.connect(_on_open_project_file_selected)
 	add_child(open_project_dialog)
 

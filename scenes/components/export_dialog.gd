@@ -26,7 +26,13 @@ func _ready() -> void:
 	folder_dialog = FileDialog.new()
 	folder_dialog.file_mode = FileDialog.FILE_MODE_OPEN_DIR
 	folder_dialog.access = FileDialog.ACCESS_FILESYSTEM
+	folder_dialog.use_native_dialog = true
 	folder_dialog.min_size = Vector2i(700, 480)
+	var initial_dir := OS.get_system_dir(OS.SYSTEM_DIR_DOCUMENTS)
+	if initial_dir.is_empty() or not DirAccess.dir_exists_absolute(initial_dir):
+		initial_dir = OS.get_environment("HOME")
+	if not initial_dir.is_empty():
+		folder_dialog.current_dir = initial_dir
 	folder_dialog.dir_selected.connect(_on_dir_selected)
 	add_child(folder_dialog)
 
