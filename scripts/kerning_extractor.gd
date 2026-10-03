@@ -1,3 +1,4 @@
+# Contributor verification test
 class_name KerningExtractor
 extends RefCounted
 
