@@ -15,7 +15,17 @@ Thank you to everyone who contributes to **MSDF Atlas Studio**!
 
 <!-- CONTRIBUTORS_START -->
 
-* *(Contributions made via GitHub Pull Requests will be credited here)*
+<table>
+  <tr>
+    <td align="center" valign="top" width="16%">
+      <a href="https://github.com/indiemantis">
+        <img src="https://avatars.githubusercontent.com/u/196818806?v=4" width="80px;" alt="indiemantis"/><br />
+        <sub><b>indiemantis</b></sub>
+      </a><br />
+      <sub>1 commit</sub>
+    </td>
+  </tr>
+</table>
 
 <!-- CONTRIBUTORS_END -->
 
