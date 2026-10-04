@@ -46,13 +46,10 @@ func _setup_file_dialogs() -> void:
 	])
 	var initial_dir := _get_initial_browse_dir()
 
-	var is_linux: bool = OS.get_name() == "Linux" or OS.get_name() == "FreeBSD"
-	var use_native: bool = not is_linux and DisplayServer.has_feature(DisplayServer.FEATURE_NATIVE_DIALOG)
-
 	primary_file_dialog = FileDialog.new()
 	primary_file_dialog.file_mode = FileDialog.FILE_MODE_OPEN_FILE
 	primary_file_dialog.access = FileDialog.ACCESS_FILESYSTEM
-	primary_file_dialog.use_native_dialog = use_native
+	primary_file_dialog.use_native_dialog = true
 	primary_file_dialog.min_size = Vector2i(700, 480)
 	primary_file_dialog.filters = font_filters
 	if not initial_dir.is_empty():
@@ -63,7 +60,7 @@ func _setup_file_dialogs() -> void:
 	fallback_file_dialog = FileDialog.new()
 	fallback_file_dialog.file_mode = FileDialog.FILE_MODE_OPEN_FILE
 	fallback_file_dialog.access = FileDialog.ACCESS_FILESYSTEM
-	fallback_file_dialog.use_native_dialog = use_native
+	fallback_file_dialog.use_native_dialog = true
 	fallback_file_dialog.min_size = Vector2i(700, 480)
 	fallback_file_dialog.filters = font_filters
 	if not initial_dir.is_empty():

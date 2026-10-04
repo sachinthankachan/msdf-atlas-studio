@@ -28,11 +28,10 @@ func _ready() -> void:
 	dir_edit.text = "user://exports"
 	filename_edit.text = "msdf_atlas"
 
-	var is_linux: bool = OS.get_name() == "Linux" or OS.get_name() == "FreeBSD"
 	folder_dialog = FileDialog.new()
 	folder_dialog.file_mode = FileDialog.FILE_MODE_OPEN_DIR
 	folder_dialog.access = FileDialog.ACCESS_FILESYSTEM
-	folder_dialog.use_native_dialog = not is_linux and DisplayServer.has_feature(DisplayServer.FEATURE_NATIVE_DIALOG)
+	folder_dialog.use_native_dialog = true
 	folder_dialog.min_size = Vector2i(700, 480)
 	var initial_dir := OS.get_system_dir(OS.SYSTEM_DIR_DOCUMENTS)
 	if initial_dir.is_empty() or not DirAccess.dir_exists_absolute(initial_dir):

@@ -106,13 +106,10 @@ func _setup_project_dialogs() -> void:
 			initial_dir = dir
 			break
 
-	var is_linux: bool = OS.get_name() == "Linux" or OS.get_name() == "FreeBSD"
-	var use_native: bool = not is_linux and DisplayServer.has_feature(DisplayServer.FEATURE_NATIVE_DIALOG)
-
 	save_project_dialog = FileDialog.new()
 	save_project_dialog.file_mode = FileDialog.FILE_MODE_SAVE_FILE
 	save_project_dialog.access = FileDialog.ACCESS_FILESYSTEM
-	save_project_dialog.use_native_dialog = use_native
+	save_project_dialog.use_native_dialog = true
 	save_project_dialog.min_size = Vector2i(750, 500)
 	save_project_dialog.filters = proj_filters
 	if not initial_dir.is_empty():
@@ -123,7 +120,7 @@ func _setup_project_dialogs() -> void:
 	open_project_dialog = FileDialog.new()
 	open_project_dialog.file_mode = FileDialog.FILE_MODE_OPEN_FILE
 	open_project_dialog.access = FileDialog.ACCESS_FILESYSTEM
-	open_project_dialog.use_native_dialog = use_native
+	open_project_dialog.use_native_dialog = true
 	open_project_dialog.min_size = Vector2i(750, 500)
 	open_project_dialog.filters = proj_filters
 	if not initial_dir.is_empty():
