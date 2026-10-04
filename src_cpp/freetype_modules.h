@@ -1,7 +1,4 @@
-#ifndef FREETYPE_MODULES_H
-#define FREETYPE_MODULES_H
-
-/* minimal freetype modules needed for font rasterization */
+/* FreeType modules configuration - no include guards because ftinit.c includes this multiple times */
 FT_USE_MODULE( FT_Driver_ClassRec, tt_driver_class )
 FT_USE_MODULE( FT_Driver_ClassRec, cff_driver_class )
 FT_USE_MODULE( FT_Module_Class, psaux_module_class )
@@ -10,5 +7,3 @@ FT_USE_MODULE( FT_Module_Class, pshinter_module_class )
 FT_USE_MODULE( FT_Module_Class, sfnt_module_class )
 FT_USE_MODULE( FT_Renderer_Class, ft_smooth_renderer_class )
 FT_USE_MODULE( FT_Renderer_Class, ft_raster1_renderer_class )
-
-#endif
