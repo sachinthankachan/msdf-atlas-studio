@@ -109,7 +109,10 @@ func _read_font_bytes(path: String) -> PackedByteArray:
 		if ResourceLoader.exists(path):
 			var res = ResourceLoader.load(path)
 			if res is FontFile:
-				var data: PackedByteArray = (res as FontFile).data
+				var ff: FontFile = res as FontFile
+				var data: PackedByteArray = ff.data
+				if data.is_empty():
+					data = ff.get_data()
 				if not data.is_empty():
 					return data
 
@@ -122,7 +125,10 @@ func _read_font_bytes(path: String) -> PackedByteArray:
 				if ResourceLoader.exists(path):
 					var res = ResourceLoader.load(path)
 					if res is FontFile:
-						var data: PackedByteArray = (res as FontFile).data
+						var ff: FontFile = res as FontFile
+						var data: PackedByteArray = ff.data
+						if data.is_empty():
+							data = ff.get_data()
 						if not data.is_empty():
 							return data
 			return bytes
