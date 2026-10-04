@@ -80,4 +80,5 @@ else:
     lib_name = f"{bin_dir}/libmsdf_backend.linux.{env['target']}.{arch}{env['SHLIBSUFFIX']}"
 
 library = env.SharedLibrary(lib_name, source=all_sources)
+env.Depends(library, ["freetype_modules.h", "msdf_generator.h", "register_types.h"])
 Default(library)
