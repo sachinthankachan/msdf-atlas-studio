@@ -89,9 +89,9 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ github.workspace }}/.scons-cache/
-          key: scons-${{ matrix.platform }}-${{ matrix.arch }}-${{ hashFiles('src_cpp/**', '.gitmodules') }}
+          key: scons-v2-${{ matrix.platform }}-${{ matrix.arch }}-${{ hashFiles('src_cpp/**', '.gitmodules') }}
           restore-keys: |
-            scons-${{ matrix.platform }}-${{ matrix.arch }}-
+            scons-v2-${{ matrix.platform }}-${{ matrix.arch }}-
 
       - name: Build GDExtension (template_release)
         shell: bash
@@ -187,12 +187,16 @@ jobs:
           touch build/.gdignore
 
           ./godot --headless --export-release "Linux" build/linux/msdf-atlas-studio.x86_64
+          mkdir -p build/linux/bin
+          cp -r bin/* build/linux/bin/
           mkdir -p build/linux/assets
           cp -r assets/fonts build/linux/assets/
           cp icon.svg LICENSE README.md CONTRIBUTORS.md build/linux/
           tar -czf "msdf-atlas-studio-${TAG_OR_REF}-linux-x86_64.tar.gz" -C build/linux .
 
           ./godot --headless --export-release "Windows" build/windows/msdf-atlas-studio.exe
+          mkdir -p build/windows/bin
+          cp -r bin/* build/windows/bin/
           mkdir -p build/windows/assets
           cp -r assets/fonts build/windows/assets/
           cp icon.svg LICENSE README.md CONTRIBUTORS.md build/windows/
