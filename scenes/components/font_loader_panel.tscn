@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://d4b5ynps75aea"]
 
-[ext_resource type="Script" uid="uid://h01a4wskcu7n" path="res://scenes/components/font_loader_panel.gd" id="1_script"]
+[ext_resource type="Script" path="res://scenes/components/font_loader_panel.gd" id="1_script"]
 
 [node name="FontLoaderPanel" type="VBoxContainer" unique_id=1210772761]
 offset_right = 320.0

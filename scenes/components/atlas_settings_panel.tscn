@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://ds2w22eawrc8o"]
 
-[ext_resource type="Script" uid="uid://bvbn83lgigll7" path="res://scenes/components/atlas_settings_panel.gd" id="1_script"]
+[ext_resource type="Script" path="res://scenes/components/atlas_settings_panel.gd" id="1_script"]
 
 [node name="AtlasSettingsPanel" type="VBoxContainer" unique_id=1277868064]
 offset_right = 320.0

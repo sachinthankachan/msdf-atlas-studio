@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://ds51m5lb8sc8o"]
 
-[ext_resource type="Script" uid="uid://bfb0eswsec8hm" path="res://scenes/components/atlas_viewport.gd" id="1_script"]
-[ext_resource type="Script" uid="uid://dr3d3d02edrqo" path="res://scripts/viewports/smooth_pan_zoom.gd" id="2_panzoom"]
+[ext_resource type="Script" path="res://scenes/components/atlas_viewport.gd" id="1_script"]
+[ext_resource type="Script" path="res://scripts/viewports/smooth_pan_zoom.gd" id="2_panzoom"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_t3gjn"]
 content_margin_left = 5.0

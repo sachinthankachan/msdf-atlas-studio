@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://cmainscene001"]
 
-[ext_resource type="Script" uid="uid://crk0ndgpk3uvw" path="res://scenes/main.gd" id="1_main"]
+[ext_resource type="Script" path="res://scenes/main.gd" id="1_main"]
 [ext_resource type="PackedScene" uid="uid://d4b5ynps75aea" path="res://scenes/components/font_loader_panel.tscn" id="2_fontloader"]
 [ext_resource type="PackedScene" uid="uid://wphch21lilgi" path="res://scenes/components/unicode_range_picker.tscn" id="3_unicodepicker"]
 [ext_resource type="PackedScene" uid="uid://ds2w22eawrc8o" path="res://scenes/components/atlas_settings_panel.tscn" id="4_atlassettings"]
