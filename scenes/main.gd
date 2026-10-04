@@ -293,7 +293,10 @@ func _on_new_project() -> void:
 	metrics_kerning_lbl.text = "0 pairs"
 
 func _on_open_project() -> void:
-	open_project_dialog.popup_centered_ratio(0.7)
+	if open_project_dialog.use_native_dialog:
+		open_project_dialog.show()
+	else:
+		open_project_dialog.popup_centered_ratio(0.7)
 
 func _on_save_project() -> void:
 	if AppState.current_project_path.is_empty():
@@ -302,7 +305,10 @@ func _on_save_project() -> void:
 		_execute_save_project(AppState.current_project_path)
 
 func _on_save_project_as() -> void:
-	save_project_dialog.popup_centered_ratio(0.7)
+	if save_project_dialog.use_native_dialog:
+		save_project_dialog.show()
+	else:
+		save_project_dialog.popup_centered_ratio(0.7)
 
 func _on_save_project_file_selected(path: String) -> void:
 	_execute_save_project(path)

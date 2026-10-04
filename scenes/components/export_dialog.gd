@@ -41,7 +41,12 @@ func _ready() -> void:
 	folder_dialog.dir_selected.connect(_on_dir_selected)
 	add_child(folder_dialog)
 
-	browse_dir_btn.pressed.connect(func(): folder_dialog.popup_centered_ratio(0.6))
+	browse_dir_btn.pressed.connect(func():
+		if folder_dialog.use_native_dialog:
+			folder_dialog.show()
+		else:
+			folder_dialog.popup_centered_ratio(0.6)
+	)
 	confirmed.connect(_on_export_confirmed)
 
 func _on_dir_selected(dir: String) -> void:

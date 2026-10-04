@@ -100,7 +100,10 @@ func _check_default_font() -> void:
 		_load_font(font_path, true)
 
 func _on_browse_primary_pressed() -> void:
-	primary_file_dialog.popup_centered_ratio(0.7)
+	if primary_file_dialog.use_native_dialog:
+		primary_file_dialog.show()
+	else:
+		primary_file_dialog.popup_centered_ratio(0.7)
 
 func _on_use_bundled_font_pressed() -> void:
 	var font_path := _get_bundled_font_path()
@@ -110,7 +113,10 @@ func _on_use_bundled_font_pressed() -> void:
 		push_warning("Bundled font DejaVuSans.ttf not found.")
 
 func _on_add_fallback_pressed() -> void:
-	fallback_file_dialog.popup_centered_ratio(0.7)
+	if fallback_file_dialog.use_native_dialog:
+		fallback_file_dialog.show()
+	else:
+		fallback_file_dialog.popup_centered_ratio(0.7)
 
 func _on_clear_fallbacks_pressed() -> void:
 	AppState.clear_fallbacks()
