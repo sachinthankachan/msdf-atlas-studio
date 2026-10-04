@@ -1,6 +1,8 @@
 class_name MainApp
 extends Control
 
+const MSDFProjectManager = preload("res://scripts/project_manager.gd")
+
 @onready var file_btn: MenuButton = $VBoxMain/TopMenuBar/File
 @onready var presets_btn: MenuButton = $VBoxMain/TopMenuBar/Presets
 @onready var view_btn: MenuButton = $VBoxMain/TopMenuBar/View
@@ -314,8 +316,8 @@ func _execute_save_project(path: String) -> void:
 	if ext != "msdfproj" and ext != "msdfatlas" and ext != "glyphforge" and ext != "glyphproj":
 		final_path += ".msdfproj"
 
-	var custom_ranges := unicode_range_picker.get_custom_ranges()
-	var preview_data := text_preview.get_preview_settings()
+	var custom_ranges: Array = unicode_range_picker.get_custom_ranges()
+	var preview_data: Dictionary = text_preview.get_preview_settings()
 	var project_dir := final_path.get_base_dir()
 
 	var dict: Dictionary = MSDFProjectManager.build_project_dict(
