@@ -35,7 +35,7 @@ func _ready() -> void:
 	pan_zoom.target_zoom = 1.0
 	pan_zoom.current_zoom = 1.0
 
-	text_edit.text = "Sphinx of black quartz, judge my vow!\n0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ\nabcdefghijklmnopqrstuvwxyz !@#$%^&*()_+"
+	text_edit.text = "The quick brown fox jumps over the lazy dog.\n0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ\nabcdefghijklmnopqrstuvwxyz !@#$%^&*()_+"
 	preview_controller.set_preview_text(text_edit.text)
 
 func get_preview_settings() -> Dictionary:

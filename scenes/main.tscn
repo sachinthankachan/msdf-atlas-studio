@@ -414,11 +414,11 @@ theme_override_constants/separation = 16
 
 [node name="WorkerLabel" type="Label" parent="VBoxMain/StatusBarMargin/StatusBar" unique_id=1268021590]
 layout_mode = 2
-tooltip_text = "Status of the background worker generation thread"
+tooltip_text = "Status of the background generation thread"
 mouse_filter = 1
 theme_override_colors/font_color = Color(0.5, 0.9, 0.5, 1)
 theme_override_font_sizes/font_size = 13
-text = "Worker Thread: Idle"
+text = "Thread: Idle"
 
 [node name="VSeparator" type="VSeparator" parent="VBoxMain/StatusBarMargin/StatusBar" unique_id=802123814]
 layout_mode = 2

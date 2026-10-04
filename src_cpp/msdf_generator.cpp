@@ -10,6 +10,9 @@
 
 #include <godot_cpp/core/class_db.hpp>
 #include <godot_cpp/classes/engine.hpp>
+#include <godot_cpp/classes/resource_loader.hpp>
+#include <godot_cpp/classes/font_file.hpp>
+#include <godot_cpp/classes/os.hpp>
 #include <godot_cpp/variant/utility_functions.hpp>
 
 #include <ft2build.h>
@@ -36,7 +39,9 @@ MSDFGenerator::~MSDFGenerator() {
 
 void MSDFGenerator::_bind_methods() {
     ClassDB::bind_method(D_METHOD("load_font_file", "path"), &MSDFGenerator::load_font_file);
+    ClassDB::bind_method(D_METHOD("load_font_data", "data", "path"), &MSDFGenerator::load_font_data, DEFVAL(String()));
     ClassDB::bind_method(D_METHOD("add_fallback_font_file", "path"), &MSDFGenerator::add_fallback_font_file);
+    ClassDB::bind_method(D_METHOD("add_fallback_font_data", "data", "path"), &MSDFGenerator::add_fallback_font_data, DEFVAL(String()));
     ClassDB::bind_method(D_METHOD("clear_fallback_fonts"), &MSDFGenerator::clear_fallback_fonts);
     ClassDB::bind_method(D_METHOD("set_unicode_ranges", "codepoints"), &MSDFGenerator::set_unicode_ranges);
     ClassDB::bind_method(D_METHOD("configure_atlas", "config"), &MSDFGenerator::configure_atlas);
@@ -63,14 +68,99 @@ void MSDFGenerator::_bind_methods() {
 }
 
 bool MSDFGenerator::_load_file_bytes(const String &p_path, std::vector<uint8_t> &r_data) {
+    if (p_path.is_empty()) {
+        return false;
+    }
+
+    if (p_path.begins_with("res://")) {
+        ResourceLoader *rl = ResourceLoader::get_singleton();
+        if (rl && rl->exists(p_path)) {
+            Ref<Resource> res = rl->load(p_path);
+            Ref<FontFile> ff = res;
+            if (ff.is_valid()) {
+                PackedByteArray pba = ff->get_data();
+                if (pba.size() > 0) {
+                    r_data.resize(pba.size());
+                    memcpy(r_data.data(), pba.ptr(), pba.size());
+                    return true;
+                }
+            }
+        }
+
+        OS *os = OS::get_singleton();
+        if (os) {
+            String exe_dir = os->get_executable_path().get_base_dir();
+            String rel_sub = p_path.trim_prefix("res://");
+            String disk_try = exe_dir.path_join(rel_sub);
+            if (FileAccess::file_exists(disk_try)) {
+                PackedByteArray disk_bytes = FileAccess::get_file_as_bytes(disk_try);
+                if (disk_bytes.size() > 0) {
+                    r_data.resize(disk_bytes.size());
+                    memcpy(r_data.data(), disk_bytes.ptr(), disk_bytes.size());
+                    return true;
+                }
+            }
+            String base_try = exe_dir.path_join(p_path.get_file());
+            if (FileAccess::file_exists(base_try)) {
+                PackedByteArray disk_bytes = FileAccess::get_file_as_bytes(base_try);
+                if (disk_bytes.size() > 0) {
+                    r_data.resize(disk_bytes.size());
+                    memcpy(r_data.data(), disk_bytes.ptr(), disk_bytes.size());
+                    return true;
+                }
+            }
+        }
+    }
+
+    PackedByteArray pba = FileAccess::get_file_as_bytes(p_path);
+    if (pba.size() > 0) {
+        if (pba.size() >= 4 && pba[0] == 'R' && pba[1] == 'S' && pba[2] == 'C' && pba[3] == 'C') {
+            ResourceLoader *rl = ResourceLoader::get_singleton();
+            if (rl && rl->exists(p_path)) {
+                Ref<Resource> res = rl->load(p_path);
+                Ref<FontFile> ff = res;
+                if (ff.is_valid()) {
+                    PackedByteArray font_bytes = ff->get_data();
+                    if (font_bytes.size() > 0) {
+                        r_data.resize(font_bytes.size());
+                        memcpy(r_data.data(), font_bytes.ptr(), font_bytes.size());
+                        return true;
+                    }
+                }
+            }
+        } else {
+            r_data.resize(pba.size());
+            memcpy(r_data.data(), pba.ptr(), pba.size());
+            return true;
+        }
+    }
+
     Ref<FileAccess> fa = FileAccess::open(p_path, FileAccess::READ);
-    if (fa.is_valid()) {
+    if (fa.is_valid() && fa->is_open()) {
         uint64_t len = fa->get_length();
         if (len > 0) {
-            PackedByteArray pba = fa->get_buffer(len);
-            r_data.resize(len);
-            memcpy(r_data.data(), pba.ptr(), len);
-            return true;
+            PackedByteArray buffer = fa->get_buffer(len);
+            if (buffer.size() > 0) {
+                if (buffer.size() >= 4 && buffer[0] == 'R' && buffer[1] == 'S' && buffer[2] == 'C' && buffer[3] == 'C') {
+                    ResourceLoader *rl = ResourceLoader::get_singleton();
+                    if (rl && rl->exists(p_path)) {
+                        Ref<Resource> res = rl->load(p_path);
+                        Ref<FontFile> ff = res;
+                        if (ff.is_valid()) {
+                            PackedByteArray font_bytes = ff->get_data();
+                            if (font_bytes.size() > 0) {
+                                r_data.resize(font_bytes.size());
+                                memcpy(r_data.data(), font_bytes.ptr(), font_bytes.size());
+                                return true;
+                            }
+                        }
+                    }
+                } else {
+                    r_data.resize(buffer.size());
+                    memcpy(r_data.data(), buffer.ptr(), buffer.size());
+                    return true;
+                }
+            }
         }
     }
 
@@ -92,7 +182,6 @@ bool MSDFGenerator::_load_file_bytes(const String &p_path, std::vector<uint8_t> 
 }
 
 bool MSDFGenerator::load_font_file(const String &p_path) {
-    std::lock_guard<std::mutex> lock(data_mutex);
     std::vector<uint8_t> bytes;
     if (!_load_file_bytes(p_path, bytes)) {
         return false;
@@ -110,13 +199,38 @@ bool MSDFGenerator::load_font_file(const String &p_path) {
     msdfgen::destroyFont(font);
     msdfgen::deinitializeFreetype(ft);
 
+    std::lock_guard<std::mutex> lock(data_mutex);
+    primary_font_data = std::move(bytes);
+    primary_font_path = p_path;
+    return true;
+}
+
+bool MSDFGenerator::load_font_data(const PackedByteArray &p_data, const String &p_path) {
+    if (p_data.size() == 0) {
+        return false;
+    }
+    std::vector<uint8_t> bytes(p_data.size());
+    memcpy(bytes.data(), p_data.ptr(), p_data.size());
+
+    msdfgen::FreetypeHandle *ft = msdfgen::initializeFreetype();
+    if (!ft) {
+        return false;
+    }
+    msdfgen::FontHandle *font = msdfgen::loadFontData(ft, bytes.data(), (int)bytes.size());
+    if (!font) {
+        msdfgen::deinitializeFreetype(ft);
+        return false;
+    }
+    msdfgen::destroyFont(font);
+    msdfgen::deinitializeFreetype(ft);
+
+    std::lock_guard<std::mutex> lock(data_mutex);
     primary_font_data = std::move(bytes);
     primary_font_path = p_path;
     return true;
 }
 
 bool MSDFGenerator::add_fallback_font_file(const String &p_path) {
-    std::lock_guard<std::mutex> lock(data_mutex);
     std::vector<uint8_t> bytes;
     if (!_load_file_bytes(p_path, bytes)) {
         return false;
@@ -134,6 +248,32 @@ bool MSDFGenerator::add_fallback_font_file(const String &p_path) {
     msdfgen::destroyFont(font);
     msdfgen::deinitializeFreetype(ft);
 
+    std::lock_guard<std::mutex> lock(data_mutex);
+    fallback_font_data.push_back(std::move(bytes));
+    fallback_font_paths.push_back(p_path);
+    return true;
+}
+
+bool MSDFGenerator::add_fallback_font_data(const PackedByteArray &p_data, const String &p_path) {
+    if (p_data.size() == 0) {
+        return false;
+    }
+    std::vector<uint8_t> bytes(p_data.size());
+    memcpy(bytes.data(), p_data.ptr(), p_data.size());
+
+    msdfgen::FreetypeHandle *ft = msdfgen::initializeFreetype();
+    if (!ft) {
+        return false;
+    }
+    msdfgen::FontHandle *font = msdfgen::loadFontData(ft, bytes.data(), (int)bytes.size());
+    if (!font) {
+        msdfgen::deinitializeFreetype(ft);
+        return false;
+    }
+    msdfgen::destroyFont(font);
+    msdfgen::deinitializeFreetype(ft);
+
+    std::lock_guard<std::mutex> lock(data_mutex);
     fallback_font_data.push_back(std::move(bytes));
     fallback_font_paths.push_back(p_path);
     return true;

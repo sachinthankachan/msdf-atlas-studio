@@ -104,10 +104,13 @@ func _setup_project_dialogs() -> void:
 			initial_dir = dir
 			break
 
+	var is_linux: bool = OS.get_name() == "Linux" or OS.get_name() == "FreeBSD"
+	var use_native: bool = not is_linux and DisplayServer.has_feature(DisplayServer.FEATURE_NATIVE_DIALOG)
+
 	save_project_dialog = FileDialog.new()
 	save_project_dialog.file_mode = FileDialog.FILE_MODE_SAVE_FILE
 	save_project_dialog.access = FileDialog.ACCESS_FILESYSTEM
-	save_project_dialog.use_native_dialog = true
+	save_project_dialog.use_native_dialog = use_native
 	save_project_dialog.min_size = Vector2i(750, 500)
 	save_project_dialog.filters = proj_filters
 	if not initial_dir.is_empty():
@@ -118,7 +121,7 @@ func _setup_project_dialogs() -> void:
 	open_project_dialog = FileDialog.new()
 	open_project_dialog.file_mode = FileDialog.FILE_MODE_OPEN_FILE
 	open_project_dialog.access = FileDialog.ACCESS_FILESYSTEM
-	open_project_dialog.use_native_dialog = true
+	open_project_dialog.use_native_dialog = use_native
 	open_project_dialog.min_size = Vector2i(750, 500)
 	open_project_dialog.filters = proj_filters
 	if not initial_dir.is_empty():
@@ -278,7 +281,7 @@ func _on_new_project() -> void:
 	AppState.reset_project()
 	unicode_range_picker.set_custom_ranges([])
 	text_preview.set_preview_settings({
-		"sample_text": "Sphinx of black quartz, judge my vow!\n0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ\nabcdefghijklmnopqrstuvwxyz !@#$%^&*()_+",
+		"sample_text": "The quick brown fox jumps over the lazy dog.\n0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ\nabcdefghijklmnopqrstuvwxyz !@#$%^&*()_+",
 		"font_size": 48.0,
 		"bg_option": 0,
 		"kerning_enabled": true
@@ -509,11 +512,11 @@ func _on_help_menu_id_pressed(id: int) -> void:
 		dlg.popup_centered()
 
 func _on_gen_started() -> void:
-	status_worker_lbl.text = "Worker Thread: Generating..."
+	status_worker_lbl.text = "Thread: Generating..."
 	status_worker_lbl.modulate = Color(1.0, 0.8, 0.3)
 
 func _on_gen_completed(_img: Image, metadata: Dictionary) -> void:
-	status_worker_lbl.text = "Worker Thread: Idle"
+	status_worker_lbl.text = "Thread: Idle"
 	status_worker_lbl.modulate = Color(0.5, 0.9, 0.5)
 	status_time_lbl.text = "Generation Time: %d ms" % AppState.last_generation_duration_ms
 
@@ -545,12 +548,12 @@ func _on_gen_completed(_img: Image, metadata: Dictionary) -> void:
 	metrics_packed_lbl.text = "%.1f%%" % efficiency
 
 func _on_gen_failed(error_msg: String) -> void:
-	status_worker_lbl.text = "Worker Thread: Error"
+	status_worker_lbl.text = "Thread: Error"
 	status_worker_lbl.modulate = Color(1.0, 0.4, 0.4)
 	status_msg_lbl.text = "Error: " + error_msg
 
 func _on_gen_cancelled() -> void:
-	status_worker_lbl.text = "Worker Thread: Idle"
+	status_worker_lbl.text = "Thread: Idle"
 	status_worker_lbl.modulate = Color(0.7, 0.7, 0.7)
 	status_msg_lbl.text = "Generation cancelled."
 

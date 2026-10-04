@@ -3,7 +3,7 @@ extends Control
 
 @export var app_state: Node = null
 
-var preview_text: String = "Sphinx of black quartz, judge my vow!\n0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ\nabcdefghijklmnopqrstuvwxyz !@#$%^&*()_+"
+var preview_text: String = "The quick brown fox jumps over the lazy dog.\n0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ\nabcdefghijklmnopqrstuvwxyz !@#$%^&*()_+"
 var font_size_pt: float = 48.0
 var line_spacing_factor: float = 1.25
 

@@ -98,14 +98,60 @@ func _update_codepoints_from_set(cp_set: Dictionary) -> void:
 	selected_codepoints = PackedInt32Array(arr)
 	codepoints_changed.emit(selected_codepoints.size())
 
+func _read_font_bytes(path: String) -> PackedByteArray:
+	if path.is_empty():
+		return PackedByteArray()
+
+	# 1. If res:// path, try loading through Godot ResourceLoader as FontFile first
+	if path.begins_with("res://"):
+		if ResourceLoader.exists(path):
+			var res = ResourceLoader.load(path)
+			if res is FontFile:
+				var data: PackedByteArray = (res as FontFile).data
+				if not data.is_empty():
+					return data
+
+	# 2. Try direct read via FileAccess
+	if FileAccess.file_exists(path):
+		var bytes := FileAccess.get_file_as_bytes(path)
+		if not bytes.is_empty():
+			# If file starts with Godot's binary resource signature RSCC, decompress via ResourceLoader
+			if bytes.size() >= 4 and bytes[0] == 0x52 and bytes[1] == 0x53 and bytes[2] == 0x43 and bytes[3] == 0x43:
+				if ResourceLoader.exists(path):
+					var res = ResourceLoader.load(path)
+					if res is FontFile:
+						var data: PackedByteArray = (res as FontFile).data
+						if not data.is_empty():
+							return data
+			return bytes
+
+	# 3. Bundled resource fallback on exported standalone releases (check directory of executable)
+	if path.begins_with("res://"):
+		var rel_sub := path.trim_prefix("res://")
+		var exe_dir := OS.get_executable_path().get_base_dir()
+		var disk_candidate := exe_dir.path_join(rel_sub)
+		if FileAccess.file_exists(disk_candidate):
+			return FileAccess.get_file_as_bytes(disk_candidate)
+		var base_candidate := exe_dir.path_join(path.get_file())
+		if FileAccess.file_exists(base_candidate):
+			return FileAccess.get_file_as_bytes(base_candidate)
+
+	return PackedByteArray()
+
 func load_primary_font(path: String) -> bool:
 	if not generator:
 		_init_generator()
 	if not generator:
 		generation_failed.emit("GDExtension MSDFGenerator not initialized.")
 		return false
-	
-	var ok: bool = generator.load_font_file(path)
+
+	var font_bytes := _read_font_bytes(path)
+	var ok: bool = false
+	if not font_bytes.is_empty() and generator.has_method("load_font_data"):
+		ok = generator.load_font_data(font_bytes, path)
+	else:
+		ok = generator.load_font_file(path)
+
 	if ok:
 		primary_font_path = path
 		font_loaded.emit(path, true)
@@ -119,8 +165,14 @@ func add_fallback_font(path: String) -> bool:
 		_init_generator()
 	if not generator:
 		return false
-	
-	var ok: bool = generator.add_fallback_font_file(path)
+
+	var font_bytes := _read_font_bytes(path)
+	var ok: bool = false
+	if not font_bytes.is_empty() and generator.has_method("add_fallback_font_data"):
+		ok = generator.add_fallback_font_data(font_bytes, path)
+	else:
+		ok = generator.add_fallback_font_file(path)
+
 	if ok:
 		fallback_font_paths.append(path)
 		font_loaded.emit(path, false)
@@ -151,7 +203,7 @@ func start_generation() -> void:
 	
 	generation_start_time = Time.get_ticks_msec()
 	generation_started.emit()
-	status_message_updated.emit("Generating MSDF atlas on background worker...")
+	status_message_updated.emit("Generating MSDF atlas on background thread...")
 	generator.generate_async()
 
 func cancel_generation() -> void:

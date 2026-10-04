@@ -50,7 +50,9 @@ public:
     ~MSDFGenerator();
 
     bool load_font_file(const String &p_path);
+    bool load_font_data(const PackedByteArray &p_data, const String &p_path = String());
     bool add_fallback_font_file(const String &p_path);
+    bool add_fallback_font_data(const PackedByteArray &p_data, const String &p_path = String());
     void clear_fallback_fonts();
     void set_unicode_ranges(const PackedInt32Array &p_codepoints);
     void configure_atlas(const Dictionary &p_config);

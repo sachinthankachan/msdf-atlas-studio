@@ -16,10 +16,10 @@ compatibility/default_parent_skeleton_in_mesh_instance_3d=true
 
 config/name="MSDF Atlas Studio"
 run/main_scene="res://scenes/main.tscn"
-config/features=PackedStringArray("4.7", "GL Compatibility")
+config/features=PackedStringArray("4.3", "GL Compatibility")
 boot_splash/bg_color=Color(0.003921569, 0, 0.023529412, 1)
-boot_splash/stretch_mode=0
-boot_splash/image="res://assets/icons/icon.png"
+boot_splash/show_image=false
+boot_splash/image=""
 config/icon="res://icon.svg"
 run/low_processor_usage_mode=true
 
