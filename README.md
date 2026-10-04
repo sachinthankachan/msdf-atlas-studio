@@ -17,15 +17,15 @@
 
 ---
 
-## 🚀 Download Prebuilt Binaries
+## Download Prebuilt Binaries
 
 Portable, zero-installation executables are available for all major desktop platforms:
 
 | Platform | Download Link | Details |
 | :--- | :--- | :--- |
-| 🐧 **Linux** | [**Linux x86_64 (.tar.gz)**](https://github.com/sachinthankachan/msdf-atlas-studio/releases/latest) | Standalone portable binary (Ubuntu, Fedora, Arch) |
-| 🪟 **Windows** | [**Windows x64 (.zip)**](https://github.com/sachinthankachan/msdf-atlas-studio/releases/latest) | Standalone portable `.exe` |
-| 🍎 **macOS** | [**macOS Universal (.zip)**](https://github.com/sachinthankachan/msdf-atlas-studio/releases/latest) | Apple Silicon (M-series) & Intel universal `.app` |
+| **Linux** | [**Linux x86_64 (.tar.gz)**](https://github.com/sachinthankachan/msdf-atlas-studio/releases/latest) | Standalone portable binary (Ubuntu, Fedora, Arch) |
+| **Windows** | [**Windows x64 (.zip)**](https://github.com/sachinthankachan/msdf-atlas-studio/releases/latest) | Standalone portable `.exe` |
+| **macOS** | [**macOS Universal (.zip)**](https://github.com/sachinthankachan/msdf-atlas-studio/releases/latest) | Apple Silicon (M-series) & Intel universal `.app` |
 
 Visit the [**Latest GitHub Release**](https://github.com/sachinthankachan/msdf-atlas-studio/releases/latest) for release notes and standalone GDExtension bundles.
 
