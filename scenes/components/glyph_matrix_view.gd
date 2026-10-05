@@ -11,6 +11,10 @@ var is_mmb_dragging: bool = false
 var mmb_drag_start_pos: Vector2 = Vector2.ZERO
 var mmb_scroll_start: Vector2 = Vector2.ZERO
 
+var _is_dirty: bool = true
+var _buttons_by_cp: Dictionary = {}
+var _selected_cp: int = -1
+
 var _styles_initialized: bool = false
 var _style_normal: StyleBoxFlat
 var _style_hover: StyleBoxFlat
@@ -134,29 +138,41 @@ func _apply_button_styles(btn: Button, is_packed: bool, is_selected: bool) -> vo
 
 func _ready() -> void:
 	_init_styles()
-	filter_edit.text_changed.connect(func(_t): _refresh_grid())
+	filter_edit.text_changed.connect(func(_t):
+		_is_dirty = true
+		_refresh_grid()
+	)
 	visibility_changed.connect(func():
 		if is_visible_in_tree():
-			_refresh_grid()
+			if _is_dirty:
+				_refresh_grid()
+			else:
+				_update_columns()
+				if _selected_cp != -1 and _buttons_by_cp.has(_selected_cp):
+					_ensure_button_visible(_buttons_by_cp[_selected_cp])
 	)
 	if AppState:
 		AppState.generation_completed.connect(_on_generation_completed)
 		AppState.glyph_selected.connect(_on_glyph_selected)
 		AppState.codepoints_changed.connect(func(_cnt):
+			_is_dirty = true
 			if is_visible_in_tree():
 				_refresh_grid()
 		)
 		if not AppState.current_metadata.is_empty():
 			_on_generation_completed(null, AppState.current_metadata)
 		else:
-			_refresh_grid()
+			if is_visible_in_tree():
+				_refresh_grid()
 
 func _on_generation_completed(_img: Image, metadata: Dictionary) -> void:
 	packed_glyphs_map.clear()
 	var glyphs: Array = metadata.get("glyphs", [])
 	for g in glyphs:
 		packed_glyphs_map[g.get("unicode", 0)] = g
-	_refresh_grid()
+	_is_dirty = true
+	if is_visible_in_tree():
+		_refresh_grid()
 
 static func safe_chr(cp: int) -> String:
 	if cp < 32 or (cp >= 127 and cp <= 159) or (cp >= 0xD800 and cp <= 0xDFFF):
@@ -204,76 +220,110 @@ func _update_columns() -> void:
 			grid_container.columns = new_cols
 
 func _refresh_grid() -> void:
+	_is_dirty = false
 	_update_columns()
-	for child in grid_container.get_children():
-		child.queue_free()
+	_buttons_by_cp.clear()
 
 	var filter_text: String = filter_edit.text.strip_edges().to_lower()
 	var total_count: int = 0
 	var missing_count: int = 0
 	var cur_selected_cp: int = AppState.selected_glyph.get("unicode", -1) if AppState else -1
+	_selected_cp = cur_selected_cp
 
+	# 1. Filter matching codepoints
+	var matched_cps: Array[int] = []
 	for cp in AppState.selected_codepoints:
 		var char_str: String = safe_chr(cp)
 		var hex_str: String = "U+%04X" % cp
-
 		if not filter_text.is_empty():
 			if not (char_str.to_lower().contains(filter_text) or hex_str.to_lower().contains(filter_text)):
 				continue
+		matched_cps.append(cp)
 
-		total_count += 1
+	var needed_count: int = matched_cps.size()
+	var existing_children: Array = grid_container.get_children()
+
+	# 2. Prune any excess button nodes beyond needed_count
+	for i in range(needed_count, existing_children.size()):
+		existing_children[i].queue_free()
+
+	# 3. Populate / reuse button nodes
+	for i in range(needed_count):
+		var cp: int = matched_cps[i]
+		var char_str: String = safe_chr(cp)
+		var hex_str: String = "U+%04X" % cp
 		var is_packed: bool = packed_glyphs_map.has(cp)
+		total_count += 1
 		if not is_packed:
 			missing_count += 1
 
-		var btn: Button = Button.new()
-		btn.custom_minimum_size = Vector2(64, 64)
-		btn.focus_mode = Control.FOCUS_NONE
-		btn.clip_contents = true
+		var btn: Button
+		var char_lbl: Label
+		var hex_lbl: Label
 
-		var vbox: VBoxContainer = VBoxContainer.new()
-		vbox.name = "VBox"
-		vbox.custom_minimum_size = Vector2(64, 64)
-		vbox.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		vbox.alignment = BoxContainer.ALIGNMENT_CENTER
-		vbox.add_theme_constant_override("separation", 2)
-		btn.add_child(vbox)
-		vbox.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		if i < existing_children.size() and is_instance_valid(existing_children[i]):
+			btn = existing_children[i]
+			btn.visible = true
+			var vbox: VBoxContainer = btn.get_node_or_null("VBox")
+			char_lbl = vbox.get_node_or_null("CharLabel") if vbox else null
+			hex_lbl = vbox.get_node_or_null("HexLabel") if vbox else null
+		else:
+			btn = Button.new()
+			btn.custom_minimum_size = Vector2(64, 64)
+			btn.focus_mode = Control.FOCUS_NONE
+			btn.clip_contents = true
 
-		var char_lbl: Label = Label.new()
-		char_lbl.name = "CharLabel"
-		char_lbl.text = char_str if cp > 32 else "␣"
-		char_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		char_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-		char_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		char_lbl.size_flags_vertical = Control.SIZE_EXPAND_FILL
-		char_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		char_lbl.add_theme_font_size_override("font_size", 22)
-		vbox.add_child(char_lbl)
+			var vbox: VBoxContainer = VBoxContainer.new()
+			vbox.name = "VBox"
+			vbox.custom_minimum_size = Vector2(64, 64)
+			vbox.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			vbox.alignment = BoxContainer.ALIGNMENT_CENTER
+			vbox.add_theme_constant_override("separation", 2)
+			btn.add_child(vbox)
+			vbox.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 
-		var hex_lbl: Label = Label.new()
-		hex_lbl.name = "HexLabel"
-		hex_lbl.text = hex_str if is_packed else "MISSING"
-		hex_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		hex_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-		hex_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		hex_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		hex_lbl.add_theme_font_size_override("font_size", 9)
-		vbox.add_child(hex_lbl)
+			char_lbl = Label.new()
+			char_lbl.name = "CharLabel"
+			char_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+			char_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+			char_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			char_lbl.size_flags_vertical = Control.SIZE_EXPAND_FILL
+			char_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			char_lbl.add_theme_font_size_override("font_size", 22)
+			vbox.add_child(char_lbl)
+
+			hex_lbl = Label.new()
+			hex_lbl.name = "HexLabel"
+			hex_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+			hex_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+			hex_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			hex_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			hex_lbl.add_theme_font_size_override("font_size", 9)
+			vbox.add_child(hex_lbl)
+
+			btn.pressed.connect(func():
+				var btn_cp: int = btn.get_meta("codepoint", -1)
+				if btn_cp != -1:
+					AppState.select_glyph_by_unicode(btn_cp)
+			)
+			grid_container.add_child(btn)
+
+		btn.set_meta("codepoint", cp)
+		btn.set_meta("is_packed", is_packed)
+
+		if char_lbl:
+			char_lbl.text = char_str if cp > 32 else "␣"
+		if hex_lbl:
+			hex_lbl.text = hex_str if is_packed else "MISSING"
 
 		if is_packed:
 			btn.tooltip_text = "%s (%s)\nStatus: Packed in Atlas" % [char_str, hex_str]
 		else:
 			btn.tooltip_text = "%s (%s)\nStatus: Missing / Not found in font" % [char_str, hex_str]
 
-		btn.set_meta("codepoint", cp)
-		btn.set_meta("is_packed", is_packed)
-
 		var is_selected: bool = (cp == cur_selected_cp and cur_selected_cp != -1)
 		_apply_button_styles(btn, is_packed, is_selected)
-
-		btn.pressed.connect(func(): AppState.select_glyph_by_unicode(cp))
-		grid_container.add_child(btn)
+		_buttons_by_cp[cp] = btn
 
 	info_label.text = "Total: %d | Packed: %d | Missing: %d" % [
 		total_count,
@@ -281,20 +331,31 @@ func _refresh_grid() -> void:
 		missing_count
 	]
 
-func _on_glyph_selected(glyph_data: Dictionary) -> void:
-	var selected_cp: int = glyph_data.get("unicode", -1)
-	var selected_btn: Button = null
-	for child in grid_container.get_children():
-		if child is Button:
-			var btn_cp: int = child.get_meta("codepoint", -1)
-			var is_packed: bool = child.get_meta("is_packed", false)
-			var is_sel: bool = (btn_cp == selected_cp and selected_cp != -1)
-			_apply_button_styles(child, is_packed, is_sel)
-			if is_sel:
-				selected_btn = child
+	if _selected_cp != -1 and _buttons_by_cp.has(_selected_cp):
+		_ensure_button_visible(_buttons_by_cp[_selected_cp])
 
-	if selected_btn:
-		_ensure_button_visible(selected_btn)
+func _on_glyph_selected(glyph_data: Dictionary) -> void:
+	var new_cp: int = glyph_data.get("unicode", -1)
+	if new_cp == _selected_cp:
+		return
+
+	# Deselect previously selected button
+	if _selected_cp != -1 and _buttons_by_cp.has(_selected_cp):
+		var prev_btn: Button = _buttons_by_cp[_selected_cp]
+		if is_instance_valid(prev_btn):
+			var was_packed: bool = prev_btn.get_meta("is_packed", false)
+			_apply_button_styles(prev_btn, was_packed, false)
+
+	_selected_cp = new_cp
+
+	# Select newly selected button
+	if _selected_cp != -1 and _buttons_by_cp.has(_selected_cp):
+		var cur_btn: Button = _buttons_by_cp[_selected_cp]
+		if is_instance_valid(cur_btn):
+			var is_packed: bool = cur_btn.get_meta("is_packed", false)
+			_apply_button_styles(cur_btn, is_packed, true)
+			if is_visible_in_tree():
+				_ensure_button_visible(cur_btn)
 
 func _ensure_button_visible(btn: Button) -> void:
 	if not scroll_container or not is_instance_valid(btn):
