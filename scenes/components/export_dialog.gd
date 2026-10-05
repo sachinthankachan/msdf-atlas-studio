@@ -28,29 +28,95 @@ func _ready() -> void:
 	dir_edit.text = "user://exports"
 	filename_edit.text = "msdf_atlas"
 
+	_setup_folder_dialog()
+
+	browse_dir_btn.pressed.connect(_on_browse_dir_pressed)
+	confirmed.connect(_on_export_confirmed)
+	dir_edit.focus_exited.connect(_on_dir_edit_focus_exited)
+
+func _setup_folder_dialog() -> void:
 	folder_dialog = FileDialog.new()
-	folder_dialog.file_mode = FileDialog.FILE_MODE_OPEN_DIR
 	folder_dialog.access = FileDialog.ACCESS_FILESYSTEM
-	folder_dialog.use_native_dialog = true
-	folder_dialog.min_size = Vector2i(700, 480)
-	var initial_dir := OS.get_system_dir(OS.SYSTEM_DIR_DOCUMENTS)
-	if initial_dir.is_empty() or not DirAccess.dir_exists_absolute(initial_dir):
-		initial_dir = OS.get_environment("HOME")
-	if not initial_dir.is_empty():
-		folder_dialog.current_dir = initial_dir
-	folder_dialog.dir_selected.connect(_on_dir_selected)
+	folder_dialog.use_native_dialog = false
+	folder_dialog.file_mode = FileDialog.FILE_MODE_OPEN_DIR
+	folder_dialog.title = "Select Export Destination Folder"
+	folder_dialog.ok_button_text = "Select Current Folder"
+	folder_dialog.min_size = Vector2i(750, 500)
+	folder_dialog.dir_selected.connect(_apply_selected_directory)
+	folder_dialog.file_selected.connect(func(file_path: String):
+		_apply_selected_directory(file_path.get_base_dir())
+	)
 	add_child(folder_dialog)
 
-	browse_dir_btn.pressed.connect(func():
-		if folder_dialog.use_native_dialog:
-			folder_dialog.show()
-		else:
-			folder_dialog.popup_centered_ratio(0.6)
-	)
-	confirmed.connect(_on_export_confirmed)
+func _get_browse_start_dir() -> String:
+	var current_text := dir_edit.text.strip_edges()
+	if not current_text.is_empty():
+		var global_current := ProjectSettings.globalize_path(current_text)
+		if DirAccess.dir_exists_absolute(global_current):
+			return global_current
+		elif FileAccess.file_exists(global_current):
+			return global_current.get_base_dir()
+		elif DirAccess.dir_exists_absolute(current_text):
+			return current_text
+		elif FileAccess.file_exists(current_text):
+			return current_text.get_base_dir()
 
-func _on_dir_selected(dir: String) -> void:
-	dir_edit.text = dir
+	var candidates := [
+		OS.get_system_dir(OS.SYSTEM_DIR_DOCUMENTS),
+		OS.get_environment("HOME"),
+		OS.get_environment("USERPROFILE"),
+		OS.get_executable_path().get_base_dir()
+	]
+	for dir in candidates:
+		if not dir.is_empty() and DirAccess.dir_exists_absolute(dir):
+			return dir
+	return ""
+
+func _on_browse_dir_pressed() -> void:
+	var start_dir := _get_browse_start_dir()
+
+	if DisplayServer.has_feature(DisplayServer.FEATURE_NATIVE_DIALOG):
+		var err := DisplayServer.file_dialog_show(
+			"Select Export Destination Folder",
+			start_dir,
+			"",
+			false,
+			DisplayServer.FILE_DIALOG_MODE_OPEN_DIR,
+			PackedStringArray(),
+			_on_native_folder_callback
+		)
+		if err == OK:
+			return
+
+	if not start_dir.is_empty():
+		folder_dialog.current_dir = start_dir
+	folder_dialog.popup_centered_ratio(0.7)
+
+func _on_native_folder_callback(status: bool, selected_paths: PackedStringArray, _selected_filter_index: int) -> void:
+	if not status or selected_paths.is_empty():
+		return
+	var picked := selected_paths[0].strip_edges()
+	if picked.is_empty():
+		return
+	_apply_selected_directory(picked)
+
+func _apply_selected_directory(path: String) -> void:
+	var resolved := path.strip_edges()
+	if FileAccess.file_exists(resolved):
+		resolved = resolved.get_base_dir()
+	elif not DirAccess.dir_exists_absolute(resolved) and not resolved.get_extension().is_empty():
+		resolved = resolved.get_base_dir()
+	if resolved.is_empty():
+		resolved = "user://exports"
+	dir_edit.text = resolved
+
+func _on_dir_edit_focus_exited() -> void:
+	var text_val := dir_edit.text.strip_edges()
+	if text_val.is_empty():
+		dir_edit.text = "user://exports"
+		return
+	if FileAccess.file_exists(text_val):
+		dir_edit.text = text_val.get_base_dir()
 
 func _on_export_confirmed() -> void:
 	if not AppState or AppState.current_metadata.is_empty():
@@ -58,6 +124,14 @@ func _on_export_confirmed() -> void:
 		return
 
 	var out_dir: String = dir_edit.text.strip_edges()
+	if FileAccess.file_exists(out_dir):
+		out_dir = out_dir.get_base_dir()
+	elif not DirAccess.dir_exists_absolute(out_dir) and not out_dir.get_extension().is_empty():
+		out_dir = out_dir.get_base_dir()
+	if out_dir.is_empty():
+		out_dir = "user://exports"
+	dir_edit.text = out_dir
+
 	var base_name: String = filename_edit.text.strip_edges()
 	if base_name.is_empty(): base_name = "msdf_atlas"
 
