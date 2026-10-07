@@ -1,7 +1,5 @@
 extends Node
 
-const KerningExtractor = preload("res://scripts/kerning_extractor.gd")
-
 signal font_loaded(path: String, is_primary: bool)
 signal generation_started()
 signal generation_progress(ratio: float)

@@ -1,8 +1,6 @@
 class_name MainApp
 extends Control
 
-const MSDFProjectManager = preload("res://scripts/project_manager.gd")
-
 @onready var file_btn: MenuButton = $VBoxMain/TopMenuBar/File
 @onready var presets_btn: MenuButton = $VBoxMain/TopMenuBar/Presets
 @onready var view_btn: MenuButton = $VBoxMain/TopMenuBar/View
@@ -30,6 +28,18 @@ var help_menu: PopupMenu
 
 var save_project_dialog: FileDialog
 var open_project_dialog: FileDialog
+
+@onready var right_sidebar_scroll: ScrollContainer = $VBoxMain/HSplitMain/CenterRightSplit/RightSidebar/Scroll
+@onready var right_sidebar_vbox: VBoxContainer = $VBoxMain/HSplitMain/CenterRightSplit/RightSidebar/Scroll/Margin/VBox
+@onready var inspector_title: Label = $VBoxMain/HSplitMain/CenterRightSplit/RightSidebar/Scroll/Margin/VBox/InspectorTitle
+@onready var inspector_section: VBoxContainer = $VBoxMain/HSplitMain/CenterRightSplit/RightSidebar/Scroll/Margin/VBox/InspectorSection
+@onready var inspector_sep: HSeparator = $VBoxMain/HSplitMain/CenterRightSplit/RightSidebar/Scroll/Margin/VBox/HSeparator
+@onready var metrics_title: Label = $VBoxMain/HSplitMain/CenterRightSplit/RightSidebar/Scroll/Margin/VBox/MetricsTitle
+@onready var metrics_section: GridContainer = $VBoxMain/HSplitMain/CenterRightSplit/RightSidebar/Scroll/Margin/VBox/MetricsSection
+@onready var metrics_sep: HSeparator = $VBoxMain/HSplitMain/CenterRightSplit/RightSidebar/Scroll/Margin/VBox/HSeparator2
+@onready var shader_title: Label = $VBoxMain/HSplitMain/CenterRightSplit/RightSidebar/Scroll/Margin/VBox/ShaderTitle
+@onready var shader_section: VBoxContainer = $VBoxMain/HSplitMain/CenterRightSplit/RightSidebar/Scroll/Margin/VBox/ShaderSection
+@onready var shader_sep: HSeparator = $VBoxMain/HSplitMain/CenterRightSplit/RightSidebar/Scroll/Margin/VBox/HSeparator3
 
 @onready var char_tile_lbl: Label = $VBoxMain/HSplitMain/CenterRightSplit/RightSidebar/Scroll/Margin/VBox/InspectorSection/Tile/CharLabel
 @onready var glyph_unicode_lbl: Label = $VBoxMain/HSplitMain/CenterRightSplit/RightSidebar/Scroll/Margin/VBox/InspectorSection/UnicodeValue
@@ -70,6 +80,8 @@ func _ready() -> void:
 	_setup_menus()
 	_setup_project_dialogs()
 	_setup_shader_controls()
+	tab_container.tab_changed.connect(_on_tab_changed)
+	_update_sidebar_for_tab(tab_container.current_tab)
 	export_button.pressed.connect(_on_export_button_pressed)
 
 func _setup_window_icon() -> void:
@@ -648,3 +660,36 @@ func _on_glyph_selected(g: Dictionary) -> void:
 
 func _on_status_updated(msg: String) -> void:
 	status_msg_lbl.text = msg
+
+func _on_tab_changed(tab: int) -> void:
+	_update_sidebar_for_tab(tab)
+
+func _update_sidebar_for_tab(tab: int) -> void:
+	var is_live_preview := (tab == 1)
+	if is_live_preview:
+		inspector_title.visible = false
+		inspector_section.visible = false
+		inspector_sep.visible = false
+		# Put live shader effects first so the user sees preview settings immediately
+		right_sidebar_vbox.move_child(shader_title, 0)
+		right_sidebar_vbox.move_child(shader_section, 1)
+		right_sidebar_vbox.move_child(metrics_sep, 2)
+		right_sidebar_vbox.move_child(metrics_title, 3)
+		right_sidebar_vbox.move_child(metrics_section, 4)
+	else:
+		# Restore glyph inspector at the top for Atlas View (0) and Glyph Grid (2)
+		right_sidebar_vbox.move_child(inspector_title, 0)
+		right_sidebar_vbox.move_child(inspector_section, 1)
+		right_sidebar_vbox.move_child(inspector_sep, 2)
+		right_sidebar_vbox.move_child(metrics_title, 3)
+		right_sidebar_vbox.move_child(metrics_section, 4)
+		right_sidebar_vbox.move_child(metrics_sep, 5)
+		right_sidebar_vbox.move_child(shader_title, 6)
+		right_sidebar_vbox.move_child(shader_section, 7)
+		right_sidebar_vbox.move_child(shader_sep, 8)
+		right_sidebar_vbox.move_child(export_button, 9)
+		inspector_title.visible = true
+		inspector_section.visible = true
+		inspector_sep.visible = true
+
+	right_sidebar_scroll.scroll_vertical = 0

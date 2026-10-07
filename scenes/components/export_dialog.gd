@@ -1,11 +1,6 @@
 class_name ExportDialog
 extends ConfirmationDialog
 
-const JsonExporter = preload("res://scripts/exporters/json_exporter.gd")
-const BMFontExporter = preload("res://scripts/exporters/bmfont_exporter.gd")
-const GodotResourceExporter = preload("res://scripts/exporters/godot_resource_exporter.gd")
-const CHeaderExporter = preload("res://scripts/exporters/c_header_exporter.gd")
-
 @onready var dir_edit: LineEdit = $VBox/DirContainer/DirEdit
 @onready var browse_dir_btn: Button = $VBox/DirContainer/BrowseButton
 @onready var filename_edit: LineEdit = $VBox/FileContainer/FilenameEdit
