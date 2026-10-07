@@ -59,7 +59,7 @@ Visit the [**Latest GitHub Release**](https://github.com/sachinthankachan/msdf-a
   * Infinite smooth canvas pan & zoom controls.
 
 <p align="center">
-  <img src="docs/images/live_preview_MSDF.png" alt="Live MSDF Shader Viewport Preview" width="90%">
+  <img src="docs/images/live.gif" alt="Live MSDF Shader Viewport Preview" width="90%">
 </p>
 
 * **Multi-Target Exporters:**
