@@ -1,14 +1,17 @@
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Godot Engine](https://img.shields.io/badge/Godot-4.3%2B-478cbf?logo=godotengine&logoColor=white)](https://godotengine.org)
-[![C++](https://img.shields.io/badge/C%2B%2B-17-00599C?logo=c%2B%2B&logoColor=white)](https://isocpp.org)
-[![Build & Release](https://github.com/sachinthankachan/msdf-atlas-studio/actions/workflows/build_and_release.yml/badge.svg)](https://github.com/sachinthankachan/msdf-atlas-studio/actions/workflows/build_and_release.yml)
-
-<br><br><br>
 <p align="center">
-  
-  <img src="icon.png" alt="MSDF Atlas Studio Main UI" width="20%">
+  <img src="icon.png" alt="MSDF Atlas Studio Logo" width="20%">
 </p>
-<h1 align = "center">MSDF Atlas Studio</h1><br>
+
+<h1 align="center">MSDF Atlas Studio</h1>
+<br>
+
+<p align="center">
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="License: MIT"></a>
+  <a href="https://godotengine.org"><img src="https://img.shields.io/badge/Godot-4.3%2B-478cbf?logo=godotengine&logoColor=white" alt="Godot Engine"></a>
+  <a href="https://isocpp.org"><img src="https://img.shields.io/badge/C%2B%2B-17-00599C?logo=c%2B%2B&logoColor=white" alt="C++"></a>
+  <a href="https://github.com/sachinthankachan/msdf-atlas-studio/actions/workflows/build_and_release.yml"><img src="https://github.com/sachinthankachan/msdf-atlas-studio/actions/workflows/build_and_release.yml/badge.svg" alt="Build & Release"></a>
+</p>
+
 <p align="center">
   <img src="docs/images/msdf_atlas_studio_hero.png" alt="MSDF Atlas Studio Main UI" width="90%">
 </p>
@@ -58,6 +61,7 @@ Visit the [**Latest GitHub Release**](https://github.com/sachinthankachan/msdf-a
 <p align="center">
   <img src="docs/images/live_preview_MSDF.png" alt="Live MSDF Shader Viewport Preview" width="90%">
 </p>
+
 * **Multi-Target Exporters:**
   * **AngelCode BMFont:** Standard `.fnt` + `.png` descriptor pairs supported by most 2D/3D engines.
   * **JSON Atlas:** Rich metadata specification compatible with WebGL, Three.js, and custom renderers.
