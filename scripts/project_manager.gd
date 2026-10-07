@@ -96,7 +96,10 @@ static func build_project_dict(
 	sp_dict["text_color"] = color_to_array(shader_params.get("text_color", Color.WHITE))
 	sp_dict["outline_color"] = color_to_array(shader_params.get("outline_color", Color.BLACK))
 	sp_dict["outline_thickness"] = shader_params.get("outline_thickness", 0.0)
+	sp_dict["outline_inward"] = shader_params.get("outline_inward", true)
 	sp_dict["shadow_color"] = color_to_array(shader_params.get("shadow_color", Color(0, 0, 0, 0.5)))
+	sp_dict["shadow_distance"] = shader_params.get("shadow_distance", 4.24)
+	sp_dict["shadow_angle"] = shader_params.get("shadow_angle", 45.0)
 	sp_dict["shadow_offset"] = vec2_to_array(shader_params.get("shadow_offset", Vector2(3, 3)))
 	sp_dict["shadow_softness"] = shader_params.get("shadow_softness", 0.03)
 	sp_dict["px_range"] = shader_params.get("px_range", 4.0)
@@ -181,8 +184,16 @@ static func load_project(file_path: String) -> Dictionary:
 		parsed_sp["text_color"] = array_to_color(sp_dict.get("text_color", [1, 1, 1, 1]), Color.WHITE)
 		parsed_sp["outline_color"] = array_to_color(sp_dict.get("outline_color", [0, 0, 0, 1]), Color.BLACK)
 		parsed_sp["outline_thickness"] = float(sp_dict.get("outline_thickness", 0.0))
+		parsed_sp["outline_inward"] = bool(sp_dict.get("outline_inward", true))
 		parsed_sp["shadow_color"] = array_to_color(sp_dict.get("shadow_color", [0, 0, 0, 0.5]), Color(0, 0, 0, 0.5))
-		parsed_sp["shadow_offset"] = array_to_vec2(sp_dict.get("shadow_offset", [3, 3]), Vector2(3, 3))
+		var s_off := array_to_vec2(sp_dict.get("shadow_offset", [3, 3]), Vector2(3, 3))
+		var s_dist: float = float(sp_dict.get("shadow_distance", s_off.length()))
+		var s_ang: float = float(sp_dict.get("shadow_angle", rad_to_deg(s_off.angle()) if s_off.length() > 0.001 else 45.0))
+		if s_ang < 0.0:
+			s_ang += 360.0
+		parsed_sp["shadow_distance"] = s_dist
+		parsed_sp["shadow_angle"] = s_ang
+		parsed_sp["shadow_offset"] = s_off
 		parsed_sp["shadow_softness"] = float(sp_dict.get("shadow_softness", 0.03))
 		parsed_sp["px_range"] = float(sp_dict.get("px_range", 4.0))
 		parsed_sp["field_type"] = int(sp_dict.get("field_type", 2))

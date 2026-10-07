@@ -10,6 +10,7 @@ uniform bool is_shadow = false;
 uniform vec4 text_color : source_color = vec4(1.0, 1.0, 1.0, 1.0);
 uniform vec4 outline_color : source_color = vec4(0.0, 0.0, 0.0, 1.0);
 uniform float outline_thickness : hint_range(0.0, 1.0) = 0.0;
+uniform bool outline_inward = true;
 uniform vec4 shadow_color : source_color = vec4(0.0, 0.0, 0.0, 0.5);
 uniform float shadow_softness : hint_range(0.001, 0.5) = 0.03;
 
@@ -66,7 +67,7 @@ void fragment() {
 
         if (outline_thickness > 0.001) {
             float eff_out = clamp(outline_thickness * 0.48, 0.0, 0.48);
-            float eff_in = clamp(outline_thickness * 0.28, 0.0, 0.28);
+            float eff_in = outline_inward ? clamp(outline_thickness * 0.28, 0.0, 0.28) : 0.0;
 
             float out_screen_dist = screen_px_range * (sd - (0.5 - eff_out));
             outline_alpha = clamp(out_screen_dist + 0.5, 0.0, 1.0);

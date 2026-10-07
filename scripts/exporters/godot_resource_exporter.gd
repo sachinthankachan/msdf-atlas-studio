@@ -82,7 +82,14 @@ static func export_font_resource(path: String, metadata: Dictionary, atlas_image
 		var shadow_col: Color = shader_params.get("shadow_color", Color(0, 0, 0, 0))
 		if shadow_col.a > 0.001:
 			label_settings.shadow_color = shadow_col
-			var s_off: Vector2 = shader_params.get("shadow_offset", Vector2(3.0, 3.0))
+			var s_off: Vector2 = Vector2(3.0, 3.0)
+			if shader_params.has("shadow_distance") and shader_params.has("shadow_angle"):
+				var s_dist: float = float(shader_params.get("shadow_distance", 4.24))
+				var s_ang: float = float(shader_params.get("shadow_angle", 45.0))
+				var s_rad: float = deg_to_rad(s_ang)
+				s_off = Vector2(cos(s_rad), sin(s_rad)) * s_dist
+			else:
+				s_off = shader_params.get("shadow_offset", Vector2(3.0, 3.0))
 			label_settings.shadow_offset = s_off
 			var s_soft: float = shader_params.get("shadow_softness", 0.03)
 			label_settings.shadow_size = max(1, int(round(s_soft * font_size * 2.0)))
@@ -102,6 +109,7 @@ static func export_font_resource(path: String, metadata: Dictionary, atlas_image
 			mat.set_shader_parameter("text_color", shader_params.get("text_color", Color.WHITE))
 			mat.set_shader_parameter("outline_color", shader_params.get("outline_color", Color.BLACK))
 			mat.set_shader_parameter("outline_thickness", shader_params.get("outline_thickness", 0.0))
+			mat.set_shader_parameter("outline_inward", shader_params.get("outline_inward", true))
 			mat.set_shader_parameter("shadow_color", shader_params.get("shadow_color", Color(0, 0, 0, 0.5)))
 			mat.set_shader_parameter("shadow_softness", shader_params.get("shadow_softness", 0.03))
 			var mat_path: String = out_dir.path_join(base_name + "_material.tres")

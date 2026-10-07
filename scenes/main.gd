@@ -46,9 +46,14 @@ var open_project_dialog: FileDialog
 @onready var text_color_picker: ColorPickerButton = $VBoxMain/HSplitMain/CenterRightSplit/RightSidebar/Scroll/Margin/VBox/ShaderSection/TextColorPicker
 @onready var outline_chk: CheckBox = $VBoxMain/HSplitMain/CenterRightSplit/RightSidebar/Scroll/Margin/VBox/ShaderSection/OutlineCheck
 @onready var outline_thickness_slider: HSlider = $VBoxMain/HSplitMain/CenterRightSplit/RightSidebar/Scroll/Margin/VBox/ShaderSection/OutlineSlider
+@onready var outline_inward_chk: CheckBox = $VBoxMain/HSplitMain/CenterRightSplit/RightSidebar/Scroll/Margin/VBox/ShaderSection/OutlineInwardCheck
 @onready var outline_color_picker: ColorPickerButton = $VBoxMain/HSplitMain/CenterRightSplit/RightSidebar/Scroll/Margin/VBox/ShaderSection/OutlineColorPicker
 @onready var shadow_chk: CheckBox = $VBoxMain/HSplitMain/CenterRightSplit/RightSidebar/Scroll/Margin/VBox/ShaderSection/ShadowCheck
 @onready var shadow_color_picker: ColorPickerButton = $VBoxMain/HSplitMain/CenterRightSplit/RightSidebar/Scroll/Margin/VBox/ShaderSection/ShadowColorPicker
+@onready var shadow_distance_lbl: Label = $VBoxMain/HSplitMain/CenterRightSplit/RightSidebar/Scroll/Margin/VBox/ShaderSection/ShadowDistanceLabel
+@onready var shadow_distance_slider: HSlider = $VBoxMain/HSplitMain/CenterRightSplit/RightSidebar/Scroll/Margin/VBox/ShaderSection/ShadowDistanceSlider
+@onready var shadow_angle_lbl: Label = $VBoxMain/HSplitMain/CenterRightSplit/RightSidebar/Scroll/Margin/VBox/ShaderSection/ShadowAngleLabel
+@onready var shadow_angle_slider: HSlider = $VBoxMain/HSplitMain/CenterRightSplit/RightSidebar/Scroll/Margin/VBox/ShaderSection/ShadowAngleSlider
 @onready var shadow_softness_slider: HSlider = $VBoxMain/HSplitMain/CenterRightSplit/RightSidebar/Scroll/Margin/VBox/ShaderSection/ShadowSoftnessSlider
 
 @onready var export_dialog: ExportDialog = $ExportDialog
@@ -205,13 +210,24 @@ func _setup_shader_controls() -> void:
 	outline_color_picker.color = AppState.shader_params["outline_color"]
 	shadow_color_picker.color = AppState.shader_params["shadow_color"]
 	outline_thickness_slider.value = AppState.shader_params["outline_thickness"]
+	outline_inward_chk.button_pressed = bool(AppState.shader_params.get("outline_inward", true))
 	shadow_softness_slider.value = AppState.shader_params["shadow_softness"]
+
+	var s_dist: float = float(AppState.shader_params.get("shadow_distance", 4.24))
+	var s_ang: float = float(AppState.shader_params.get("shadow_angle", 45.0))
+	shadow_distance_slider.value = s_dist
+	shadow_angle_slider.value = s_ang
+	shadow_distance_lbl.text = "Shadow Distance: %.1f px" % s_dist
+	shadow_angle_lbl.text = "Shadow Angle: %d°" % int(round(s_ang))
 
 	text_color_picker.edit_alpha = true
 	outline_color_picker.edit_alpha = true
 	shadow_color_picker.edit_alpha = true
 
 	outline_thickness_slider.editable = outline_chk.button_pressed
+	outline_inward_chk.disabled = not outline_chk.button_pressed
+	shadow_distance_slider.editable = shadow_chk.button_pressed
+	shadow_angle_slider.editable = shadow_chk.button_pressed
 	shadow_softness_slider.editable = shadow_chk.button_pressed
 	if not shadow_chk.button_pressed:
 		AppState.update_shader_param("shadow_color", Color(0, 0, 0, 0))
@@ -227,6 +243,7 @@ func _setup_shader_controls() -> void:
 
 	outline_chk.toggled.connect(func(enabled):
 		outline_thickness_slider.editable = enabled
+		outline_inward_chk.disabled = not enabled
 		if enabled and outline_thickness_slider.value <= 0.0:
 			outline_thickness_slider.value = 0.25
 		AppState.update_shader_param("outline_thickness", outline_thickness_slider.value if enabled else 0.0)
@@ -235,8 +252,27 @@ func _setup_shader_controls() -> void:
 		if outline_chk.button_pressed:
 			AppState.update_shader_param("outline_thickness", v)
 	)
+	outline_inward_chk.toggled.connect(func(v):
+		AppState.update_shader_param("outline_inward", v)
+	)
+
+	var update_shadow_geometry := func():
+		var dist: float = shadow_distance_slider.value
+		var ang: float = shadow_angle_slider.value
+		shadow_distance_lbl.text = "Shadow Distance: %.1f px" % dist
+		shadow_angle_lbl.text = "Shadow Angle: %d°" % int(round(ang))
+		var rad: float = deg_to_rad(ang)
+		var off: Vector2 = Vector2(cos(rad), sin(rad)) * dist
+		AppState.update_shader_param("shadow_distance", dist)
+		AppState.update_shader_param("shadow_angle", ang)
+		AppState.update_shader_param("shadow_offset", off)
+
+	shadow_distance_slider.value_changed.connect(func(_v): update_shadow_geometry.call())
+	shadow_angle_slider.value_changed.connect(func(_v): update_shadow_geometry.call())
 
 	shadow_chk.toggled.connect(func(enabled):
+		shadow_distance_slider.editable = enabled
+		shadow_angle_slider.editable = enabled
 		shadow_softness_slider.editable = enabled
 		var col = shadow_color_picker.color if enabled else Color(0, 0, 0, 0)
 		AppState.update_shader_param("shadow_color", col)
@@ -405,9 +441,21 @@ func _sync_shader_controls_from_app_state() -> void:
 	outline_chk.button_pressed = ot > 0.001
 	outline_thickness_slider.value = ot
 	outline_thickness_slider.editable = outline_chk.button_pressed
+	outline_inward_chk.button_pressed = bool(AppState.shader_params.get("outline_inward", true))
+	outline_inward_chk.disabled = not outline_chk.button_pressed
+
 	var sc: Color = AppState.shader_params.get("shadow_color", Color(0, 0, 0, 0.5))
 	shadow_chk.button_pressed = sc.a > 0.001
+	var s_dist: float = float(AppState.shader_params.get("shadow_distance", 4.24))
+	var s_ang: float = float(AppState.shader_params.get("shadow_angle", 45.0))
+	shadow_distance_slider.value = s_dist
+	shadow_angle_slider.value = s_ang
+	shadow_distance_lbl.text = "Shadow Distance: %.1f px" % s_dist
+	shadow_angle_lbl.text = "Shadow Angle: %d°" % int(round(s_ang))
+	shadow_distance_slider.editable = shadow_chk.button_pressed
+	shadow_angle_slider.editable = shadow_chk.button_pressed
 	shadow_softness_slider.value = float(AppState.shader_params.get("shadow_softness", 0.03))
+	shadow_softness_slider.editable = shadow_chk.button_pressed
 
 func _update_window_title() -> void:
 	var base_title := "MSDF Atlas Studio"

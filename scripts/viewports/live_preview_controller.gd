@@ -158,12 +158,15 @@ func _update_shader_uniforms() -> void:
 	var s_col: Color = sp.get("shadow_color", Color(0, 0, 0, 0))
 	var s_soft: float = sp.get("shadow_softness", 0.03)
 
+	var o_inward: bool = sp.get("outline_inward", true)
+
 	text_material.set_shader_parameter("is_shadow", false)
 	text_material.set_shader_parameter("field_type", ft)
 	text_material.set_shader_parameter("px_range", px_r)
 	text_material.set_shader_parameter("text_color", t_col)
 	text_material.set_shader_parameter("outline_color", o_col)
 	text_material.set_shader_parameter("outline_thickness", o_thick)
+	text_material.set_shader_parameter("outline_inward", o_inward)
 	if cur_tex:
 		text_material.set_shader_parameter("msdf_texture", cur_tex)
 
@@ -173,6 +176,7 @@ func _update_shader_uniforms() -> void:
 	shadow_material.set_shader_parameter("shadow_color", s_col)
 	shadow_material.set_shader_parameter("shadow_softness", s_soft)
 	shadow_material.set_shader_parameter("outline_thickness", o_thick)
+	shadow_material.set_shader_parameter("outline_inward", o_inward)
 	if cur_tex:
 		shadow_material.set_shader_parameter("msdf_texture", cur_tex)
 
@@ -203,7 +207,15 @@ func rebuild_text() -> void:
 	var line_step: float = line_height_em * font_size_pt * line_spacing_factor
 	if line_step <= 0.0: line_step = font_size_pt * 1.25
 
-	var shadow_offset_base: Vector2 = app_state.shader_params.get("shadow_offset", Vector2(3.0, 3.0)) if app_state else Vector2(3.0, 3.0)
+	var shadow_offset_base: Vector2 = Vector2(3.0, 3.0)
+	if app_state:
+		if app_state.shader_params.has("shadow_distance") and app_state.shader_params.has("shadow_angle"):
+			var s_dist: float = float(app_state.shader_params.get("shadow_distance", 4.24))
+			var s_ang: float = float(app_state.shader_params.get("shadow_angle", 45.0))
+			var s_rad: float = deg_to_rad(s_ang)
+			shadow_offset_base = Vector2(cos(s_rad), sin(s_rad)) * s_dist
+		else:
+			shadow_offset_base = app_state.shader_params.get("shadow_offset", Vector2(3.0, 3.0))
 	var s_off: Vector2 = shadow_offset_base * (font_size_pt / 48.0)
 
 	var points: PackedVector2Array = PackedVector2Array()
