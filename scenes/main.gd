@@ -572,7 +572,8 @@ func _on_help_menu_id_pressed(id: int) -> void:
 	if id == 0:
 		var dlg: AcceptDialog = AcceptDialog.new()
 		dlg.title = "About MSDF Atlas Studio"
-		dlg.dialog_text = "MSDF Atlas Studio v0.1.0\nCreated by Sachin Thankachan\n\nGodot 4 & C++ GDExtension MSDF Atlas Generator\nWraps Viktor Chlumsky's msdf-atlas-gen and FreeType."
+		var app_ver: String = ProjectSettings.get_setting("application/config/version", "1.0.0")
+		dlg.dialog_text = "MSDF Atlas Studio v%s\nCreated by Sachin Thankachan\n\nGodot 4 & C++ GDExtension MSDF Atlas Generator\nWraps Viktor Chlumsky's msdf-atlas-gen and FreeType." % app_ver
 		add_child(dlg)
 		dlg.popup_centered()
 

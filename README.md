@@ -51,7 +51,8 @@ Visit the [**Latest GitHub Release**](https://github.com/sachinthankachan/msdf-a
   * Comprehensive kerning table extraction powered directly by FreeType.
 * **Live MSDF Shader Viewport:**
   * Real-time interactive text preview running the actual MSDF fragment shader.
-  * Interactive controls for text color, outline color/thickness, drop-shadow offset/color, and edge softness.
+  * Interactive controls for text color, outline color/thickness (with inward/outward expansion toggle), directional drop-shadow (polar angle & distance), and edge softness.
+  * Context-aware sidebar prioritizing live shader controls in preview mode.
   * Infinite smooth canvas pan & zoom controls.
 
 <p align="center">
@@ -60,7 +61,7 @@ Visit the [**Latest GitHub Release**](https://github.com/sachinthankachan/msdf-a
 * **Multi-Target Exporters:**
   * **AngelCode BMFont:** Standard `.fnt` + `.png` descriptor pairs supported by most 2D/3D engines.
   * **JSON Atlas:** Rich metadata specification compatible with WebGL, Three.js, and custom renderers.
-  * **Godot BitmapFont (`.res`):** Native Godot engine font resources ready for direct drag-and-drop into Godot projects.
+  * **Godot 4 Font Resources (`.tres`):** Native Godot `FontFile`, `LabelSettings`, and `ShaderMaterial` resources ready for direct drag-and-drop into Godot projects.
   * **C Header Bundle (`.h`):** Zero-dependency static C structs for embedded systems, Raylib, or custom C/C++ graphics pipelines.
 * **Studio Project Management:**
   * Non-destructive `.msdfproj` save/load format to resume workflows at any time.
